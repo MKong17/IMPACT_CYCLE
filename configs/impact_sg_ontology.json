@@ -1,0 +1,103 @@
+{
+  "canonical_entities": [
+    {
+      "label": "person",
+      "synonyms": ["human", "man", "woman", "player"],
+      "attribute_slots": ["state", "pose", "apparel", "size"],
+      "mandatory_attributes": ["state"]
+    },
+    {
+      "label": "billboard",
+      "synonyms": [],
+      "attribute_slots": ["text", "state", "size"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "monitor",
+      "synonyms": ["display", "screen"],
+      "attribute_slots": ["state", "size"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "audience",
+      "synonyms": ["crowd", "spectators"],
+      "attribute_slots": ["density", "state", "size"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "motorcycle",
+      "synonyms": ["motorbike"],
+      "attribute_slots": ["state", "size", "color"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "television",
+      "synonyms": ["tv"],
+      "attribute_slots": ["state", "size"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "stairs",
+      "synonyms": ["stairway", "steps"],
+      "attribute_slots": ["material", "state", "size"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "road",
+      "synonyms": ["street"],
+      "attribute_slots": ["material", "state", "size"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "hill",
+      "synonyms": [],
+      "attribute_slots": ["state", "size"],
+      "mandatory_attributes": []
+    },
+    {
+      "label": "sky",
+      "synonyms": [],
+      "attribute_slots": ["weather", "time_of_day"],
+      "mandatory_attributes": []
+    }
+  ],
+  "relation_vocabulary": {
+    "spatial": [
+      "left_of",
+      "right_of",
+      "above",
+      "below",
+      "overlap",
+      "inside",
+      "surrounding",
+      "intersect",
+      "touching"
+    ],
+    "interaction": [
+      "holding",
+      "wearing",
+      "carrying",
+      "sitting_on",
+      "standing_on",
+      "placed_on",
+      "looking_at",
+      "interacting_with"
+    ]
+  },
+  "question_types": [
+    "existence",
+    "counting",
+    "attribute_query",
+    "spatial_relation",
+    "interaction_relation",
+    "comparison",
+    "referring_expression_grounding"
+  ],
+  "category_prompt_templates": [
+    "{label}"
+  ],
+  "sentence_prompt_templates": [
+    "the {label} next to the {other_label}",
+    "the {label} near the {other_label}"
+  ]
+}

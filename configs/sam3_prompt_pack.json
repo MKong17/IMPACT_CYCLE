@@ -1,0 +1,24 @@
+{
+  "canonical_entities": [
+    {"label": "person", "synonyms": [], "prompt_variants": ["person"]},
+    {"label": "table", "synonyms": [], "prompt_variants": ["table"]},
+    {"label": "chair", "synonyms": [], "prompt_variants": ["chair"]},
+    {"label": "cabinet", "synonyms": [], "prompt_variants": ["cabinet"]},
+    {"label": "door", "synonyms": [], "prompt_variants": ["door"]},
+    {"label": "window", "synonyms": [], "prompt_variants": ["window"]},
+    {"label": "flower", "synonyms": [], "prompt_variants": ["flower"]},
+    {"label": "dog", "synonyms": [], "prompt_variants": ["dog"]},
+    {"label": "bottle", "synonyms": [], "prompt_variants": ["bottle"]},
+    {"label": "cup", "synonyms": [], "prompt_variants": ["cup"]},
+    {"label": "plate", "synonyms": [], "prompt_variants": ["plate"]},
+    {"label": "food", "synonyms": [], "prompt_variants": ["food"]},
+    {"label": "cake", "synonyms": [], "prompt_variants": ["cake"]},
+    {"label": "gift", "synonyms": [], "prompt_variants": ["gift"]},
+    {"label": "balloon", "synonyms": [], "prompt_variants": ["balloon"]},
+    {"label": "box", "synonyms": [], "prompt_variants": ["box"]}
+  ],
+  "category_prompt_templates": [
+    "{label}"
+  ],
+  "sentence_prompt_templates": []
+}

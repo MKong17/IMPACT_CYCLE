@@ -1,0 +1,105 @@
+{
+  "ontology_prompt_pack_file": "tmp/sg_prompts_dump.txt",
+  "backend": {
+    "provider": "external_command",
+    "max_instances_per_prompt": 8,
+    "enable_two_stage_refinement": false,
+    "cache_dir": ".cache/impact_sg",
+    "disable_cache": false,
+    "external_timeout_sec": 1800,
+    "external_use_persistent_process": true,
+    "reuse_backend_across_calls": true,
+    "external_command_cwd": ".",
+    "external_command_args_file": "",
+    "external_batch_command_args_file": "configs/sam3_external_command.linux.json",
+    "external_command_template": "",
+    "external_batch_command_template": "",
+    "mock_results_path": ""
+  },
+  "proposal": {
+    "merge_mask_iou_threshold": 0.75,
+    "human_merge_mask_iou_threshold": 0.82,
+    "risk_weights": {
+      "low_confidence": 0.45,
+      "overlap_conflict": 0.25,
+      "small_thin_prior": 0.2,
+      "ontology_ambiguity": 0.1
+    },
+    "small_object_area_ratio": 0.001,
+    "thin_object_min_dim": 8,
+    "low_confidence_threshold": 0.45,
+    "human_low_confidence_threshold": 0.16,
+    "min_score": 0.45,
+    "human_min_score": 0.22,
+    "max_risk": 0.85,
+    "human_max_risk": 0.9,
+    "max_nodes_after_merge": 48,
+    "ensure_min_human_candidates": 1,
+    "fallback_human_keep_count": 2,
+    "background_large_area_ratio": 0.08,
+    "panorama_edge_width_ratio": 0.22,
+    "panorama_edge_min_overlap": 0.35,
+    "human_edge_min_score": 0.16,
+    "human_edge_max_risk": 0.95,
+    "human_max_area_ratio": 0.55,
+    "human_edge_max_area_ratio": 0.68,
+    "human_large_area_ratio": 0.55,
+    "human_edge_large_area_ratio": 0.68,
+    "human_large_area_min_score": 0.82,
+    "human_edge_large_area_min_score": 0.88,
+    "human_hard_max_area_ratio": 0.9,
+    "human_nested_overlap_ratio": 0.72,
+    "human_nested_area_ratio": 1.35,
+    "human_nested_score_margin": 0.08,
+    "human_duplicate_iou_threshold": 0.34,
+    "human_duplicate_center_norm_threshold": 0.22,
+    "human_large_ambiguous_area_ratio": 0.28,
+    "human_large_ambiguous_contained_overlap": 0.6,
+    "human_large_ambiguous_min_contained": 2,
+    "human_large_ambiguous_score_margin": 0.06,
+    "human_small_duplicate_area_ratio_max": 0.03,
+    "human_small_duplicate_iou_threshold": 0.12,
+    "human_small_duplicate_center_norm_threshold": 0.35,
+    "human_multi_person_merge_area_ratio_min": 0.2,
+    "human_multi_person_merge_contained_overlap": 0.55,
+    "human_multi_person_merge_min_contained": 2,
+    "human_multi_person_merge_score_margin": 0.04,
+    "human_edge_priority_bonus": 0.04,
+    "human_special_handling": true,
+    "max_category_prompts": 32,
+    "person_focus_pass": false,
+    "person_focus_prompts": [
+      "person"
+    ],
+    "person_focus_prepend": false,
+    "human_priority_fallback_pass": false
+  },
+  "relations": {
+    "enable_interaction_relations": false,
+    "pairwise_max": 200,
+    "touching_iou_epsilon": 0.02
+  },
+  "attributes": {
+    "extractor": "heuristic",
+    "allow_affordance": true,
+    "default_confidence": 0.35
+  },
+  "validators": {
+    "node_low_conf_threshold": 0.4,
+    "edge_low_conf_threshold": 0.4,
+    "mandatory_attributes_required": true,
+    "max_duplicate_mask_iou": 0.9
+  },
+  "vqa": {
+    "single_turn_max_questions": 64,
+    "multi_turn_max_chains": 24,
+    "prefer_deterministic_answers": true
+  },
+  "ablation": {
+    "backend_mode": "sam3_external_command",
+    "use_raw_sam_results": false,
+    "use_sentence_refinement": false,
+    "use_validator": true,
+    "use_graph_answering": true
+  }
+}

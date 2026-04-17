@@ -1,0 +1,12 @@
+[
+  "python",
+  "tools/runners/run_in_env.py",
+  "--profile",
+  "sam3_windows",
+  "--",
+  "tools/sam3_infer.py",
+  "--runtime-config",
+  "configs/sam3_runtime.windows.json",
+  "--request_json",
+  "{request_json_path}"
+]

@@ -1,0 +1,22 @@
+FINAL_CATEGORY_PROMPT_COUNT: 16
+FINAL_SENTENCE_PROMPT_COUNT: 0
+
+=== CATEGORY PROMPTS ===
+person	person
+table	table
+chair	chair
+cabinet	cabinet
+door	door
+window	window
+flower	flower
+dog	dog
+bottle	bottle
+cup	cup
+plate	plate
+food	food
+cake	cake
+gift	gift
+balloon	balloon
+box	box
+
+=== SENTENCE PROMPTS ===

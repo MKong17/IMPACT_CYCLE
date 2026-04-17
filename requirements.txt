@@ -1,0 +1,14 @@
+# Core GUI
+PyQt5>=5.15.9
+opencv-python>=4.8.0.76
+numpy>=1.23.5
+
+# HOI detection extras (YOLO + MediaPipe)
+ultralytics>=8.0.0
+mediapipe>=0.10.9
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Gemini Online browser automation
+selenium>=4.24.0

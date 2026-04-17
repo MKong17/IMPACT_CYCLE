@@ -1,0 +1,18 @@
+{
+  "models": [
+    {
+      "id": "CG15-125BL",
+      "display_name": "CG15-125BL",
+      "aliases": ["CG15-125BL"],
+      "enabled": true,
+      "description": "Default assembly-state model profile."
+    },
+    {
+      "id": "WSG7-115A",
+      "display_name": "WSG7-115A",
+      "aliases": ["WSG7-115A"],
+      "enabled": true,
+      "description": "Alternative assembly-state model profile."
+    }
+  ]
+}

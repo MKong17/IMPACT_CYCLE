@@ -1,0 +1,43 @@
+{
+  "model_family": "sam3",
+  "model_version": "sam3",
+  "repo_root": "/lsdf/users/wkong/sam3",
+  "device": "cuda:0",
+  "preprocess_max_side": 720,
+  "mask_export": "none",
+  "max_mask_pixels": 12000,
+  "prompt_aliases": {
+    "person": "person",
+    "chair": "chair",
+    "table": "table",
+    "desk": "desk",
+    "cabinet": "cabinet",
+    "shelf": "shelf",
+    "door": "door",
+    "lamp": "lamp",
+    "box": "box",
+    "bag": "bag",
+    "bottle": "bottle",
+    "glass": "glass",
+    "cup": "glass",
+    "mug": "glass",
+    "book": "book",
+    "computer": "computer",
+    "laptop": "computer",
+    "notebook": "computer",
+    "monitor": "monitor",
+    "screen": "monitor"
+  },
+  "category_discovery": {
+    "model_version": "sam3",
+    "checkpoint_path": "/cvhci/temp/wkong/sam3/sam3.pt",
+    "score_threshold": 0.25,
+    "mask_export": "none"
+  },
+  "sentence_refine": {
+    "model_version": "sam3",
+    "checkpoint_path": "/cvhci/temp/wkong/sam3/sam3.pt",
+    "score_threshold": 0.2,
+    "mask_export": "none"
+  }
+}

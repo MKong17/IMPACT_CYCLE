@@ -1,0 +1,10 @@
+{
+  "ui": "smc",
+  "opentad": "smc",
+  "east": "smc",
+  "asot": "smc",
+  "qwen": "qwen",
+  "sam3": "sam3",
+  "sam3_windows": "sam3",
+  "sam3_wsl": "sam3"
+}
