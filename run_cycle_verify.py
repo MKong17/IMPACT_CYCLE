@@ -42,6 +42,39 @@ def _save_json(path: str, obj: Any) -> None:
         json.dump(obj, f, ensure_ascii=True, indent=2)
 
 
+def _sanitize_saved_graph(graph: Dict[str, object]) -> Dict[str, object]:
+    out = dict(graph or {})
+    metadata = dict(out.get("metadata") or {})
+    metadata.pop("image_path", None)
+    out["metadata"] = metadata
+    return out
+
+
+def _sanitize_saved_probe(row: Dict[str, object]) -> Dict[str, object]:
+    out = dict(row or {})
+    for payload_key in ("parsed_response", "response"):
+        payload = dict(out.get(payload_key) or {}) if isinstance(out.get(payload_key), dict) else None
+        if payload is None:
+            continue
+        for key in ("raw_response", "raw_text", "request_prompt", "request_schema"):
+            payload.pop(key, None)
+        out[payload_key] = payload
+    return out
+
+
+def _sanitize_saved_result(row: Dict[str, object]) -> Dict[str, object]:
+    out = dict(row or {})
+    out["probe_results"] = [
+        _sanitize_saved_probe(item)
+        for item in list(out.get("probe_results") or [])
+        if isinstance(item, dict)
+    ]
+    graph_after = out.get("graph_after")
+    if isinstance(graph_after, dict):
+        out["graph_after"] = _sanitize_saved_graph(graph_after)
+    return out
+
+
 def _resolve_image_path(graph: Dict[str, object], bundle_dir: str) -> str:
     """Return the frame image path, falling back to cached frames."""
     meta = dict(graph.get("metadata") or {})
@@ -175,7 +208,7 @@ def main() -> None:
               f"flagged={summary.get('flagged_claim_count',0)} "
               f"queue={len(queue)}")
 
-        results.append({
+        results.append(_sanitize_saved_result({
             "graph_idx": graph_idx,
             "image_id": image_id,
             "elapsed_sec": round(elapsed, 2),
@@ -184,11 +217,11 @@ def main() -> None:
             "probe_results": probes,
             "votes": list(result.get("votes") or []),
             "graph_after": result.get("graph_after"),
-        })
+        }))
 
     total_elapsed = time.time() - t_start
     output_payload = {
-        "bundle": bundle_path,
+        "bundle": os.path.basename(bundle_path),
         "provider": requested_provider,
         "rounds": args.rounds,
         "total_elapsed_sec": round(total_elapsed, 2),

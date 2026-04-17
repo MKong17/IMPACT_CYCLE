@@ -38,7 +38,7 @@
       "qwen_model_path": "/cvhci/temp/wkong/models/Qwen2.5-VL-3B-Instruct",
       "qwen_batch_size": 3,
       "llm_cuda_device": "cuda:0",
-      "cycle_verifier_provider": "chatgpt_api",
+      "cycle_verifier_provider": "qwen25_vl",
       "cycle_local_model_path": "/cvhci/temp/wkong/models/Qwen2.5-VL-3B-Instruct",
       "cycle_allow_mock_fallback": false,
       "cycle_gemini_model": "gemini-2.5-flash",

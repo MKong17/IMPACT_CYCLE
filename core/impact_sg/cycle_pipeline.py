@@ -24,6 +24,12 @@ from .visual_verifier.policy import apply_role_policy
 from .visual_verifier.schemas import CAPTION_FEEDBACK_SCHEMA, probe_response_schema
 
 REPEAT_SKIP_SCORE_THRESHOLD = 0.55
+SENSITIVE_RESULT_KEYS = {
+    "raw_response",
+    "raw_text",
+    "request_prompt",
+    "request_schema",
+}
 
 
 def _node_map(graph: Dict[str, object]) -> Dict[str, Dict[str, object]]:
@@ -48,6 +54,39 @@ def _node_label(node: Dict[str, object]) -> str:
         return canonical
     fallback = str(node.get("label", "") or "").strip()
     return fallback or "object"
+
+
+def _sanitize_result_payload(payload: Dict[str, object]) -> Dict[str, object]:
+    out = dict(_copy_payload(payload or {}))
+    for key in SENSITIVE_RESULT_KEYS:
+        out.pop(key, None)
+    provider = str((dict(payload or {}).get("provider", "") or "")).strip()
+    if not provider:
+        provider = str((dict((payload or {}).get("raw_response") or {}).get("provider") or "")).strip()
+    if provider:
+        out["provider"] = provider
+    return out
+
+
+def _sanitize_probe_result_row(row: Dict[str, object]) -> Dict[str, object]:
+    out = dict(_copy_payload(row or {}))
+    if isinstance(out.get("parsed_response"), dict):
+        out["parsed_response"] = _sanitize_result_payload(dict(out.get("parsed_response") or {}))
+    if isinstance(out.get("response"), dict):
+        out["response"] = _sanitize_result_payload(dict(out.get("response") or {}))
+    return out
+
+
+def _sanitize_caption_payload(payload: Dict[str, object]) -> Dict[str, object]:
+    out = _sanitize_result_payload(dict(payload or {}))
+    if isinstance(out.get("feedback"), dict):
+        out["feedback"] = dict(_copy_payload(out.get("feedback") or {}))
+    out["votes"] = [
+        dict(_copy_payload(row))
+        for row in list(out.get("votes") or [])
+        if isinstance(row, dict)
+    ]
+    return out
 
 
 def _build_regions(graph: Dict[str, object], evidence_node_ids: List[str]) -> List[Dict[str, object]]:
@@ -1538,7 +1577,8 @@ def _run_probe_batch(
             or ""
         ).strip()
         results.append(
-            {
+            _sanitize_probe_result_row(
+                {
                 "probe_id": probe.get("probe_id"),
                 "view_type": view_type,
                 "probe_type": probe.get("probe_type"),
@@ -1556,7 +1596,8 @@ def _run_probe_batch(
                 "response_provider": response_provider,
                 "parsed_response": dict(resp or {}),
                 "response": dict(resp or {}),
-            }
+                }
+            )
         )
         if stage_name:
             pct = int(round(100.0 * float(idx) / float(max(1, total))))
@@ -1948,8 +1989,8 @@ def rerun_cycle_refine_for_claims(
         "claims": {k: v.to_dict() for k, v in target_claims.items()},
         "votes": weighted_votes,
         "correction_candidates": correction_candidates,
-        "probe_results": probe_results,
-        "caption": caption_payload,
+        "probe_results": [_sanitize_probe_result_row(row) for row in list(probe_results or []) if isinstance(row, dict)],
+        "caption": _sanitize_caption_payload(caption_payload),
         "human_queue": queue,
         "policy": policy_report,
     }
@@ -1983,7 +2024,11 @@ def rerun_cycle_refine_for_claims(
         node_ids=target_node_ids,
         edge_ids=target_edge_ids,
     )
-    merged_probe_results = base_probe_results + [dict(row) for row in list(probe_results or []) if isinstance(row, dict)]
+    merged_probe_results = base_probe_results + [
+        _sanitize_probe_result_row(row)
+        for row in list(probe_results or [])
+        if isinstance(row, dict)
+    ]
 
     base_queue = _filter_rows_outside_scope(
         list((base_result or {}).get("human_queue") or []),
@@ -2015,7 +2060,7 @@ def rerun_cycle_refine_for_claims(
     ]
     merged_caption = _merge_caption_payload(
         dict((base_result or {}).get("caption") or {}),
-        caption_payload,
+        _sanitize_caption_payload(caption_payload),
         target_claim_ids=target_ids,
         merged_caption_votes=merged_caption_votes,
     )
@@ -2371,8 +2416,8 @@ def run_cycle_refine(
             "claims": {k: v.to_dict() for k, v in claims.items()},
             "votes": weighted_votes,
             "correction_candidates": correction_candidates,
-            "probe_results": probe_results,
-            "caption": caption_payload,
+            "probe_results": [_sanitize_probe_result_row(row) for row in list(probe_results or []) if isinstance(row, dict)],
+            "caption": _sanitize_caption_payload(caption_payload),
             "human_queue": queue,
             "policy": policy_report,
         }
@@ -2389,7 +2434,9 @@ def run_cycle_refine(
     all_probe_results: List[Dict[str, object]] = []
     for round_payload in rounds:
         all_votes.extend([dict(row) for row in list(round_payload.get("votes") or []) if isinstance(row, dict)])
-        all_probe_results.extend([dict(row) for row in list(round_payload.get("probe_results") or []) if isinstance(row, dict)])
+        all_probe_results.extend(
+            [_sanitize_probe_result_row(row) for row in list(round_payload.get("probe_results") or []) if isinstance(row, dict)]
+        )
 
     result = {
         "graph_before": graph,
@@ -2399,7 +2446,7 @@ def run_cycle_refine(
         "votes": all_votes,
         "correction_candidates": dict(final_round.get("correction_candidates") or {}),
         "probe_results": all_probe_results,
-        "caption": dict(final_round.get("caption") or {}),
+        "caption": _sanitize_caption_payload(dict(final_round.get("caption") or {})),
         "human_queue": list(final_round.get("human_queue") or []),
         "policy": dict(final_round.get("policy") or {}),
         "resolved_claims": [dict(row) for row in list(resolved_scope.get("records") or []) if isinstance(row, dict)],

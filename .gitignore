@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+.venv/
+venv/
+
+tmp/
+log/
+logs/
+outputs/
+
+*.ndjson
+*cycle_results*.json
+*scene_graph_bundle*.json

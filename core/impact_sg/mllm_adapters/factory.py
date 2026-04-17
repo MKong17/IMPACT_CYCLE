@@ -46,6 +46,7 @@ def build_vision_verifier(
     web_cfg = dict(cycle_cfg.get("web_verifier") or {})
     web_provider = str(web_cfg.get("provider", "") or "").strip().lower()
     runtime_cfg = dict(cycle_cfg.get("runtime") or {})
+    safe_local_only = bool(runtime_cfg.get("safe_local_only", False))
     experimental_providers = {
         str(x or "").strip().lower()
         for x in list(runtime_cfg.get("experimental_providers") or [])
@@ -73,6 +74,20 @@ def build_vision_verifier(
         and str(local_cfg.get("provider", "mock") or "mock").strip().lower()
         in {"qwen25_vl", "qwen", "qwen2.5_vl", "qwen2.5-vl"}
     )
+
+    if safe_local_only:
+        if preferred in {"api", "gemini_api", "chatgpt_api", "gemini_online"}:
+            warning = "runtime.safe_local_only=true blocked external verifier selection; using a local verifier instead."
+        elif want_api or want_gemini_online:
+            warning = "runtime.safe_local_only=true blocked external verifiers; using a local verifier instead."
+        want_api = False
+        want_gemini_online = False
+        if preferred in {"api", "gemini_api", "chatgpt_api", "gemini_online", "auto"}:
+            preferred = "qwen25_vl"
+        want_qwen = preferred == "qwen25_vl" or (
+            str(local_cfg.get("provider", "mock") or "mock").strip().lower()
+            in {"qwen25_vl", "qwen", "qwen2.5_vl", "qwen2.5-vl"}
+        )
 
     def _unified(verifier):
         if isinstance(verifier, ThreadSafeVisionVerifier):

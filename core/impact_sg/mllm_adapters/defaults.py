@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-DEFAULT_CYCLE_PROVIDER = "chatgpt_api"
+DEFAULT_CYCLE_PROVIDER = "qwen25_vl"
 SUPPORTED_CYCLE_PROVIDERS = ("gemini_api", "chatgpt_api", "qwen25_vl", "manual")
 
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"

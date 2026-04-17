@@ -7,7 +7,7 @@
     "use_flash_attention": false
   },
   "api_verifier": {
-    "enabled": true,
+    "enabled": false,
     "provider": "openai",
     "model": "gpt-5.4",
     "base_url": "",
@@ -17,14 +17,15 @@
     "api_key_env": "IMPACT_OPENAI_API_KEY",
     "api_key_header": "Authorization",
     "api_key_prefix": "Bearer ",
-    "include_image_base64": true,
+    "include_image_base64": false,
     "max_output_tokens": 256,
     "extra_headers": {},
     "max_calls_per_frame": 4
   },
   "runtime": {
     "allow_mock_fallback": false,
-    "preferred_provider": "chatgpt_api",
+    "preferred_provider": "qwen25_vl",
+    "safe_local_only": true,
     "experimental_providers": []
   },
   "cycle": {
