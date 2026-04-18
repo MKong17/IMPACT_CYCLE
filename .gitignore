@@ -13,3 +13,8 @@ outputs/
 *.ndjson
 *cycle_results*.json
 *scene_graph_bundle*.json
+
+.cache
+.idea
+submission.pdf
+.codex
