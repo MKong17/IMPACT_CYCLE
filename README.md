@@ -146,10 +146,23 @@ The checked-in Linux runtime currently points to private local paths for:
 
 These must be updated before public reproduction.
 
-**TODO**
-- Add the official SAM3 checkpoint source.
-- Add the exact expected checkpoint filename and hash.
-- Add a one-command download/setup script.
+### SAM3 checkpoint
+
+Official checkpoint source: Meta’s official SAM 3 repository points to the gated Hugging Face model repo `facebook/sam3` for checkpoints.
+
+Expected checkpoint filename:
+- `sam3.pt` (PyTorch checkpoint, ~3.45 GB)
+
+Expected SHA-256:
+- `9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e`
+
+One-command download/setup:
+
+```bash
+mkdir -p models/sam3 \
+  && hf auth login \
+  && hf download facebook/sam3 sam3.pt --local-dir models/sam3 \
+  && echo "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e  models/sam3/sam3.pt" | sha256sum -c -
 
 ### 2. Verification Model
 
