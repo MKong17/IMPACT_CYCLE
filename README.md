@@ -370,7 +370,7 @@ This codebase builds on:
 
 Corresponding author:
 
-- Kunyu Peng — `kunyu.peng@kit.edu`
+- Di Wen — `di.wen@kit.edu`
 
 ## Citation
 
