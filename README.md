@@ -163,7 +163,7 @@ mkdir -p models/sam3 \
   && hf auth login \
   && hf download facebook/sam3 sam3.pt --local-dir models/sam3 \
   && echo "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e  models/sam3/sam3.pt" | sha256sum -c -
-
+```
 
 ### 2. Verification Model
 
