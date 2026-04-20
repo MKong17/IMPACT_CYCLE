@@ -1,6 +1,10 @@
 # IMPACT-CYCLE: Claim-Level Cross-Task Verification for Human-Light Video Scene Graph Refinement
 
+## 🎥 Demo
 
+![Demo](asset/IMPACT_CYCLE_2026420356.mp4)
+
+[▶️ Download full video](asset/IMPACT_CYCLE_2026420356.mp4)
 IMPACT-CYCLE reframes long-video understanding as structured semantic memory construction plus claim-level verification. Instead of trusting one opaque video-to-LLM pass, the pipeline builds a frame-grounded scene graph, decomposes it into typed claims, verifies those claims through single-turn VQA, multi-turn VQA, and caption-based audit, then fuses the evidence into a refined graph that is easier to inspect, correct, and reuse for downstream reasoning.
 
 
