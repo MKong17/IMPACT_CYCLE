@@ -4,23 +4,23 @@
 
 ![Demo](asset/IMPACT_CYCLE_2026420356.mp4)
 
-[▶️ Download full video](asset/IMPACT_CYCLE_2026420356.mp4)
+[▶️ Download Full Demo Video](asset/IMPACT_CYCLE_2026420356.mp4)
+
+---
 
 ## 🧠 Overview
 
 ![Pipeline](asset/pipeline.pdf)
 
-*Figure: Multi-agent claim-level verification and refinement pipeline.*
+*Figure: Overview of the IMPACT-CYCLE supervisory verification framework.*
 
-IMPACT-CYCLE reframes long-video understanding as structured semantic memory construction plus claim-level verification.
+IMPACT-CYCLE reformulates long-video understanding as iterative maintenance of a shared semantic memory rather than one-shot end-to-end generation. Instead of treating scene graphs as immutable prediction outputs, the framework represents video semantics as typed claims connected by a claim-dependency graph and a provenance log.
 
-IMPACT-CYCLE reframes long-video understanding as structured semantic memory construction plus claim-level verification. Instead of trusting one opaque video-to-LLM pass, the pipeline builds a frame-grounded scene graph, decomposes it into typed claims, verifies those claims through single-turn VQA, multi-turn VQA, and caption-based audit, then fuses the evidence into a refined graph that is easier to inspect, correct, and reuse for downstream reasoning.
+Starting from automatically constructed scene graphs, the framework decomposes graph elements into atomic claims and verifies them through three complementary reasoning roles: **Local Grounding**, **Temporal Consistency**, and **Global Semantic Audit**. Their evidence is aggregated by an **Arbitration Agent** operating under explicit authority contracts. Claims that cannot be resolved automatically are escalated to a human supervisor, while accepted edits trigger dependency-localized re-verification instead of rerunning the entire pipeline.
 
+The framework is designed for structured semantic correction rather than manual annotation. Human supervision is therefore concentrated only on uncertain or conflicting claims, making verification cost proportional to the scope of accepted edits rather than the length of the entire video.
 
-<!-- Teaser figure suggestion:
-Replace this comment with a pipeline figure showing:
-video -> initial scene graph -> typed claims -> single-turn / multi-turn / caption verification -> role-aware fusion -> refined graph + human review queue
--->
+---
 
 ## Table of Contents
 
@@ -38,75 +38,90 @@ video -> initial scene graph -> typed claims -> single-turn / multi-turn / capti
 - [Contact](#contact)
 - [Citation](#citation)
 
+---
+
 ## Paper
 
-This repository accompanies the camera-ready paper:
+This repository accompanies the camera-ready implementation of:
 
-**IMPACT-CYCLE: A Contract-Based Multi-Agent System for Claim-Level Supervisory Correction of Long-Video Semantic Memory**
+> **IMPACT-CYCLE: A Contract-Based Multi-Agent System for Claim-Level Supervisory Correction of Long-Video Semantic Memory**
 
-The final paper link will be added after publication.
+The official publication link will be added after the conference proceedings become available.
 
 ### Summary
 
-IMPACT-CYCLE represents long-video semantics as a revisable
-memory containing typed claims, a claim-dependency graph,
-and a provenance log. A memory constructor initializes the
-state from sampled video frames; three role-conditioned
-verifiers assess local grounding, temporal consistency, and
-global semantic coherence; and an arbitration agent fuses
-their evidence under explicit authority contracts.
+IMPACT-CYCLE represents long-video semantics as a revisable semantic memory composed of typed claims, a claim-dependency graph, and a provenance log. A memory constructor initializes this semantic state from sampled video frames. Three role-specialized verification agents evaluate complementary aspects of the memory:
 
-Claims that remain unresolved are escalated to a human
-supervisor. Accepted edits trigger re-verification only
-within the affected dependency neighborhood rather than a
-full pipeline rerun.
+- **Local Grounding** verifies object existence, attributes, and spatial relations.
+- **Temporal Consistency** verifies cross-frame consistency and temporal events.
+- **Global Semantic Audit** verifies global semantic coherence using caption- and reasoning-level evidence.
+
+Their outputs are fused by an Arbitration Agent under explicit authority contracts. Claims that remain unresolved are escalated to a human supervisor. Accepted edits trigger dependency-localized re-verification so that only the affected claim neighborhood is revisited, avoiding full pipeline re-verification.
+
+---
 
 ## Installation
 
-### Tested Smoke-Test Environment
+### Tested Environment
 
-The validated smoke-test path below was run on:
+The smoke-test configuration has been validated under the following environment:
 
 - Linux
-- Python `3.9.7`
+- Python 3.9.7
 - CPU-only
-- no local Qwen checkpoint
-- no SAM3 checkpoint
+- No local Qwen checkpoint
+- No SAM3 checkpoint
+- No external API keys
 
 ### Create an Environment
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+
 python -m pip install --upgrade pip
+
 pip install -r requirements.txt
 pip install pillow transformers matplotlib pytest
+
 export PYTHONPATH=.
-```
 
 ## Dataset Preparation
 
-### Dataset protocol
+### Dataset Protocol
 
-The public reproduction path uses the PVSG annotation format
-and the VidOR-derived video partition distributed with PVSG.
-The code expects:
+The camera-ready implementation uses the **PVSG-VidOR partition** as the unified data format. All paper experiments are conducted on a fixed evaluation subset of this partition.
 
-- a PVSG-style annotation file at `data/pvsg.json`;
+The repository expects:
+
+- a PVSG annotation file at `data/pvsg.json`;
 - source videos under `data/vidor/videos/`;
-- segmentation masks under `data/vidor/masks/<video_id>/`.
+- panoptic masks under `data/vidor/masks/<video_id>/`.
 
-The initial scene graphs are not copied from PVSG
-ground-truth scene graphs. Object proposals and instance
-masks are produced by the configured SAM3 pipeline. Initial
-spatial relations are then generated deterministically from
-proposal bounding boxes and masks.
+The initial scene graph is **not** copied from the PVSG ground-truth scene graph. Instead,
 
-PVSG ground-truth annotations are used only by evaluation
-scripts. They are not used for prompt construction, claim
-verification, arbitration, or graph revision.
+1. object proposals and instance masks are generated by the configured **SAM3** pipeline;
+2. object labels are assigned by the proposal pipeline;
+3. pairwise spatial relations are generated deterministically from object geometry (bounding boxes and masks).
 
-Recommended layout:
+Ground-truth annotations are used **only for quantitative evaluation**. They are **never** used for:
+
+- frame selection;
+- prompt construction;
+- scene graph initialization;
+- claim verification;
+- arbitration;
+- graph revision.
+
+The paper evaluation uses a fixed 240-video manifest specified by
+
+```text
+configs/paper_eval_240.json
+```
+
+which is shared by all paper evaluation scripts.
+
+Recommended directory layout:
 
 ```text
 data/
@@ -119,23 +134,28 @@ data/
             ├── 0000.png
             ├── 0001.png
             └── ...
+```
 
-### Optional: Precompute Stage-1 Detections
+---
 
-If you want to avoid rerunning the grounding backend during every ablation, precompute detections first:
+### Stage-1 Proposal Precomputation (Optional)
+
+To avoid rerunning the grounding stage during repeated
+experiments or ablations, detections may be precomputed once
+and reused.
 
 ```bash
 python tools/precompute_sam3_detections.py \
-  --videos_dir data/vidor/videos \
-  --gt_json data/pvsg.json \
-  --pipeline_config configs/impact_sg_pipeline.json \
-  --ontology configs/impact_sg_ontology.json \
-  --output_dir outputs/sam3_precompute \
-  --max_videos 240 \
-  --max_frames_per_video 5
+    --videos_dir data/vidor/videos \
+    --gt_json data/pvsg.json \
+    --pipeline_config configs/impact_sg_pipeline.json \
+    --ontology configs/impact_sg_ontology.json \
+    --output_dir outputs/sam3_precompute \
+    --max_videos 240 \
+    --max_frames_per_video 5
 ```
 
-This creates detection JSON files under:
+This produces
 
 ```text
 outputs/sam3_precompute/
@@ -145,99 +165,138 @@ outputs/sam3_precompute/
         └── 000123.json
 ```
 
-## Pretrained Checkpoints and External Services
+which can subsequently be reused by all paper evaluation
+scripts.
 
-### 1. Stage-1 Grounding Backend
+---
 
-The default scene-graph pipeline config uses an external command backend:
+# Pretrained Checkpoints and External Services
+
+## 1. Stage-1 Grounding Backend
+
+The Stage-1 grounding pipeline is configured through
 
 - `configs/impact_sg_pipeline.json`
 - `configs/sam3_external_command.linux.json`
 - `configs/sam3_runtime.linux.json`
 
-The checked-in Linux runtime currently points to private local paths for:
+No private filesystem paths are required by the public
+release. Runtime locations should be specified either in the
+configuration files or through environment variables.
 
-- `repo_root`
-- the SAM3 checkpoint
-
-These must be updated before public reproduction.
-
-### SAM3 checkpoint
-
-Official checkpoint source: Meta’s official SAM 3 repository points to the gated Hugging Face model repo `facebook/sam3` for checkpoints.
-
-Expected checkpoint filename:
-- `sam3.pt` (PyTorch checkpoint, ~3.45 GB)
-
-Expected SHA-256:
-- `9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e`
-
-One-command download/setup:
+For example,
 
 ```bash
-mkdir -p models/sam3 \
-  && hf auth login \
-  && hf download facebook/sam3 sam3.pt --local-dir models/sam3 \
-  && echo "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e  models/sam3/sam3.pt" | sha256sum -c -
+export IMPACT_SAM3_CHECKPOINT=/path/to/models/sam3/sam3.pt
 ```
 
-### 2. Verification Model
+The checked-in configuration should therefore remain
+platform-independent.
 
-#### Paper Setting
+---
 
-The PDF says the verifier is GPT-4V.
+## SAM3 Checkpoint
 
-#### Current Code Default
+IMPACT-CYCLE uses the official **SAM3** checkpoint released
+by Meta.
 
-The checked-in config defaults to a local `Qwen2.5-VL-3B-Instruct` path:
+Expected checkpoint:
 
-- `configs/impact_cycle.json -> local_verifier.model_id`
+```
+models/sam3/sam3.pt
+```
 
-Official Qwen model page:
-
-- <https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct>
-
-If you want to use the current local-verifier path, download the model and update `configs/impact_cycle.json` accordingly.
-
-#### API-Based Verifiers
-
-The repo also supports API-backed verification through environment variables:
+Official download:
 
 ```bash
-export IMPACT_OPENAI_API_KEY=YOUR_KEY
-export IMPACT_GEMINI_API_KEY=YOUR_KEY
+mkdir -p models/sam3
+
+hf auth login
+
+hf download facebook/sam3 \
+    sam3.pt \
+    --local-dir models/sam3
 ```
 
-Important:
+After downloading, update the checkpoint location through
+either
 
-- the checked-in config has API mode disabled by default
-- the paper/code match for GPT-4V is still a release note, not a turnkey checked-in config
+- `configs/sam3_runtime.linux.json`, or
+- the `IMPACT_SAM3_CHECKPOINT` environment variable.
 
-## Quickstart
+The repository never depends on hard-coded local filesystem
+paths.
 
-This is the fastest reproducible path in the current repo. It uses:
+## 2. Verification Backends
 
-- the bundled sample image `tmp/sam3_probe.png`
-- the mock backend
-- no GPU
-- no external checkpoints
-- no API keys
+The camera-ready paper evaluates two verification backends:
+
+- **GPT-4V**
+- **Gemini Pro**
+
+Both backends use the same prompt templates, arbitration
+logic, and verification pipeline. The paper configuration is
+fully specified by
+
+```text
+configs/paper_camera_ready.json
+```
+
+The local Qwen verifier is retained for development,
+debugging, and smoke testing only. It is **not** used to
+produce any quantitative results reported in the paper.
+
+---
+
+### API Credentials
+
+GPT-4V and Gemini Pro require API credentials.
+
+Configure them through environment variables:
+
+```bash
+export IMPACT_OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+export IMPACT_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+```
+
+The paper evaluation never silently falls back to another
+verification backend. If the configured backend or required
+API key is unavailable, execution terminates with an explicit
+error.
+
+---
+
+## Quickstart (Smoke Test)
+
+> **Important**
+>
+> The following smoke test validates installation and pipeline
+> connectivity only. It **does not** reproduce any quantitative
+> result reported in the paper.
+
+The smoke test uses
+
+- the bundled sample image `tmp/sam3_probe.png`;
+- the mock verification backend;
+- no GPU;
+- no external checkpoints;
+- no API keys.
 
 ```bash
 mkdir -p /tmp/impact_readme_smoke
 
 python tools/build_scene_graph.py \
-  --image_id sam3_probe \
-  --image_path tmp/sam3_probe.png \
-  --backend_provider mock \
-  --out /tmp/impact_readme_smoke/graph.json
+    --image_id sam3_probe \
+    --image_path tmp/sam3_probe.png \
+    --backend_provider mock \
+    --out /tmp/impact_readme_smoke/graph.json
 
 python tools/generate_vqa.py \
-  --scene_graph /tmp/impact_readme_smoke/graph.json \
-  --out /tmp/impact_readme_smoke/vqa.json
+    --scene_graph /tmp/impact_readme_smoke/graph.json \
+    --out /tmp/impact_readme_smoke/vqa.json
 ```
 
-Expected output on the current snapshot:
+Expected output:
 
 ```text
 [OK] scene graph saved: /tmp/impact_readme_smoke/graph.json
@@ -246,170 +305,224 @@ Expected output on the current snapshot:
 [INFO] single=64 multi=80
 ```
 
-Artifacts:
+Generated files:
 
 - `/tmp/impact_readme_smoke/graph.json`
 - `/tmp/impact_readme_smoke/vqa.json`
 
-Optional evaluation helpers for paired prediction / ground-truth files:
+---
+
+### Standalone Evaluation Helpers
+
+Prediction files can be evaluated independently using
 
 ```bash
 python tools/evaluate_scene_graph.py \
-  --pred pred_graph.json \
-  --gt gt_graph.json \
-  --out graph_metrics.json
+    --pred pred_graph.json \
+    --gt gt_graph.json \
+    --out graph_metrics.json
 
 python tools/evaluate_vqa.py \
-  --pred pred_vqa.json \
-  --gt gt_vqa.json \
-  --out vqa_metrics.json
+    --pred pred_vqa.json \
+    --gt gt_vqa.json \
+    --out vqa_metrics.json
 ```
+
+---
 
 ## Interactive GUI
 
-The repo still includes the PyQt desktop app used for inspection, debugging, and human-in-the-loop study flows:
+The repository also includes the PyQt-based inspection
+interface used for qualitative analysis and human-in-the-loop
+experiments.
+
+Launch the GUI:
 
 ```bash
 python app.py
 ```
 
-To also persist operation logs alongside saved outputs:
+To additionally record operator interaction logs:
 
 ```bash
 python app.py --oplog
 ```
 
-The current GUI exposes four paper-relevant task panels behind one shared video player:
+The GUI provides four integrated task panels sharing the
+same video player:
 
-- `Video Scene Graph`
-- `Single-turn VQA`
-- `Multi-turn VQA`
-- `Video Captioning`
+- Video Scene Graph
+- Single-turn VQA
+- Multi-turn VQA
+- Video Captioning
 
-This is useful for qualitative demos and bundle generation, but the paper-facing quantitative path is driven by the scripts below.
+The GUI is intended for visualization, debugging, and user
+studies. All quantitative results reported in the paper are
+generated by the command-line evaluation pipeline described
+below.
 
-## Core Paper Scripts
+# Core Paper Scripts
 
-### 1. Cycle Verification on an Existing Bundle
+## 1. Claim-Level Verification on an Existing Bundle
 
-Use [`run_cycle_verify.py`](run_cycle_verify.py) when you already have a `scene_graph_bundle.json` and want to run claim-level verification plus graph refinement on selected frames:
+If an initial `scene_graph_bundle.json` has already been
+constructed, run claim-level verification and graph
+refinement using
 
 ```bash
 python run_cycle_verify.py \
-  --bundle log/<run_name>/scene_graph_bundle.json \
-  --provider mock \
-  --rounds 1 \
-  --output log/<run_name>/cycle_results.json
+    --bundle log/<run_name>/scene_graph_bundle.json \
+    --provider chatgpt_api \
+    --rounds 2 \
+    --output log/<run_name>/cycle_results.json
 ```
 
-Notes:
+Useful options:
 
-- `--frames 0 4 8` restricts verification to selected 0-based frame indices.
-- `--low-quota` disables multi-turn and caption probes.
-- Replace `mock` with `qwen25_vl`, `gemini_api`, or `chatgpt_api` after configuring the corresponding local model or API credentials.
+- `--frames 0 4 8` verifies only selected keyframes.
+- `--low_quota` disables expensive multi-turn and caption probes.
+- `--provider` may be `chatgpt_api` or `gemini_api` according to the paper configuration.
 
-### 2. Dataset-Level Evaluation / Ablations
+---
 
-Use [`run_pvsg_eval.py`](run_pvsg_eval.py) for the paper-style evaluation path over PVSG/VidOR data:
+## 2. Dataset-Level Evaluation
+
+Dataset-level experiments reported in the paper are executed
+using
 
 ```bash
 python run_pvsg_eval.py \
-  --videos_dir data/vidor/videos \
-  --masks_dir data/vidor/masks \
-  --gt_json data/pvsg.json \
-  --provider mock \
-  --pipeline_config configs/impact_sg_pipeline.json \
-  --config configs/impact_cycle.json \
-  --ontology configs/impact_sg_ontology.json \
-  --output_dir outputs/pvsg_eval \
-  --max_videos 5 \
-  --max_frames_per_video 5 \
-  --write_csv
+    --videos_dir data/vidor/videos \
+    --masks_dir data/vidor/masks \
+    --gt_json data/pvsg.json \
+    --pipeline_config configs/impact_sg_pipeline.json \
+    --config configs/paper_camera_ready.json \
+    --ontology configs/impact_sg_ontology.json \
+    --output_dir outputs/paper_predictions \
+    --max_frames_per_video 5 \
+    --write_csv
 ```
 
-Common variants:
+Useful options:
 
-- Add `--load_detections_from outputs/sam3_precompute` to reuse precomputed Stage-1 detections.
-- Add `--skip_cycle` for a build-only ablation.
-- Add `--low_quota` to disable expensive probes and reduce token usage.
-- Add `--ablation_suite paper5` to run the bundled paper ablation sweep in one pass.
+- `--load_detections_from outputs/sam3_precompute`
+- `--skip_cycle`
+- `--low_quota`
+- `--ablation_suite paper5`
 
-## Documentation
+Ground-truth temporal-span frame sampling is **not** used by
+the paper configuration. If retained in the repository, it
+should be considered an **oracle diagnostic** only.
 
-- [docs/gui_operator_guide.md](docs/gui_operator_guide.md): current GUI launch, shared controls, and four-task operator flow
-- [docs/file_formats.md](docs/file_formats.md): retained file-format, validation-log, and oplog notes
-- [docs/archive/legacy_annotation_manual.md](docs/archive/legacy_annotation_manual.md): archived Action Segmentation / HOI / PSR notes that are not part of the paper path
-- [docs/interactive_action_segmentation_method_guide_20260320.md](docs/interactive_action_segmentation_method_guide_20260320.md): method-level explanation of the legacy EAST online-learning workflow
+---
 
-## Repository Structure
+## 3. Paper Reproduction
+
+The camera-ready experiments are reproduced using
+
+- `configs/paper_camera_ready.json`
+- `configs/paper_eval_240.json`
+
+After prediction generation, reproduce Tables II--IV by
+running
+
+```bash
+python tools/evaluate_paper.py \
+    --config configs/paper_camera_ready.json \
+    --predictions_dir outputs/paper_predictions \
+    --output_dir outputs/paper_tables
+```
+
+Expected outputs:
+
+```text
+outputs/paper_tables/
+├── table_ii.tex
+├── table_iii.tex
+├── table_iv.tex
+├── summary.json
+└── per_video_metrics.csv
+```
+
+---
+
+# Documentation
+
+- `docs/gui_operator_guide.md`
+- `docs/file_formats.md`
+- `docs/archive/legacy_annotation_manual.md`
+- `docs/interactive_action_segmentation_method_guide_20260320.md`
+
+---
+
+# Repository Structure
 
 ```text
 .
-├── app.py                        # PyQt desktop application
-├── submission.pdf                # current paper submission
-├── run_cycle_verify.py           # run cycle refinement on an existing scene-graph bundle
-├── run_pvsg_eval.py    # dataset-level evaluation and ablation sweep
-├── parse_metrics.py              # ad hoc log parser; not release-ready
-├── configs/                      # pipeline, ontology, cycle, and runtime configs
-├── core/impact_sg/               # core IMPACT-CYCLE logic
-│   ├── claim_graph.py            # claim decomposition and probe generation
-│   ├── cycle_pipeline.py         # verification loop orchestration
-│   ├── belief_update.py          # claim fusion and graph revision
-│   ├── arbitration.py            # human-query generation
-│   ├── captioning.py             # caption-audit prompts and claim votes
-│   ├── eval_cycle.py             # verification metrics
-│   ├── eval_scene_graph.py       # graph metrics
-│   ├── eval_vqa.py               # VQA metrics
-│   ├── pvsg_reference.py         # PVSG/VidOR-style reference loading
-│   └── visual_verifier/policy.py # role-aware vote weighting
+├── app.py
+├── run_cycle_verify.py
+├── run_pvsg_eval.py
+├── configs/
+│   ├── paper_camera_ready.json
+│   ├── paper_eval_240.json
+│   ├── impact_cycle.json
+│   ├── impact_sg_pipeline.json
+│   └── impact_sg_ontology.json
+├── core/
 ├── tools/
-│   ├── build_scene_graph.py      # single-image scene-graph build
-│   ├── generate_vqa.py           # graph-grounded VQA generation
-│   ├── evaluate_scene_graph.py   # graph-vs-GT evaluation
-│   ├── evaluate_vqa.py           # VQA evaluation
-│   ├── precompute_sam3_detections.py
-│   └── runners/run_in_env.py     # helper for alternate conda env profiles
-├── ui/                           # GUI widgets and task panels
-├── tests/                        # unit tests
-└── tmp/sam3_probe.png            # bundled smoke-test image
+│   ├── evaluate_paper.py
+│   ├── build_scene_graph.py
+│   ├── generate_vqa.py
+│   ├── evaluate_scene_graph.py
+│   ├── evaluate_vqa.py
+│   └── precompute_sam3_detections.py
+├── ui/
+├── tests/
+└── tmp/
 ```
 
-## License
+---
 
-This repository currently includes an Apache-2.0 license:
+# License
 
-- [LICENSE](LICENSE)
+This repository is released under the Apache-2.0 License.
 
-Please also check the licenses and terms of use for:
-
-- VidOR
-- PVSG
-- Qwen checkpoints
-- any external API-backed verifier you use
-
-## Acknowledgments
-
-This codebase builds on:
+Please also comply with the licenses of
 
 - VidOR
 - PVSG
-- PyQt5 and OpenCV for the GUI
-- Qwen and API-backed MLLM verifiers for multimodal verification
+- SAM3
+- GPT-4V / Gemini Pro APIs (if used)
 
-## Contact
+---
 
-Corresponding author:
+# Acknowledgments
+
+This project builds upon
+
+- VidOR
+- PVSG
+- SAM3
+- PyQt5
+- OpenCV
+
+---
+
+# Contact
+
+Corresponding author
 
 - Di Wen — `di.wen@kit.edu`
 
-## Citation
+---
+
+# Citation
 
 ```bibtex
-@inproceedings{kong2026impact_cycle,
-  title     = {IMPACT-Cycle: Claim-Level Cross-Task Verification for Human-Light Video Scene Graph Refinement},
-  author    = {Kong, Weitong and Wen, Di and Peng, Kunyu and Schneider, David and Zhong, Zeyun and Jaus, Alexander and Marinov, Zdravko and Wei, Jiale and Liu, Ruiping and Zheng, Junwei and Chen, Yufan and Qi, Lei and Stiefelhagen, Rainer},
-  booktitle = {IEEE International Conference on Systems, Man, and Cybernetics (SMC)},
-  year      = {2026},
-  note      = {Under review}
+@inproceedings{kong2026impactcycle,
+  title={IMPACT-CYCLE: A Contract-Based Multi-Agent System for Claim-Level Supervisory Correction of Long-Video Semantic Memory},
+  author={Kong, Weitong and Wen, Di and Peng, Kunyu and Schneider, David and Zhong, Zeyun and Jaus, Alexander and Marinov, Zdravko and Wei, Jiale and Liu, Ruiping and Zheng, Junwei and Chen, Yufan and Qi, Lei and Stiefelhagen, Rainer},
+  booktitle={IEEE International Conference on Systems, Man, and Cybernetics (SMC)},
+  year={2026}
 }
 ```
