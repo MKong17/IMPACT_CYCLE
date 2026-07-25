@@ -1,4 +1,4 @@
-# IMPACT-CYCLE: Claim-Level Cross-Task Verification for Human-Light Video Scene Graph Refinement
+# IMPACT-CYCLE: A Contract-Based Multi-Agent System for Claim-Level Supervisory Correction of Long-Video Semantic Memory
 
 ## 🎥 Demo
 
@@ -40,15 +40,26 @@ video -> initial scene graph -> typed claims -> single-turn / multi-turn / capti
 
 ## Paper
 
-- arXiv: TODO
+This repository accompanies the camera-ready paper:
+
+**IMPACT-CYCLE: A Contract-Based Multi-Agent System for Claim-Level Supervisory Correction of Long-Video Semantic Memory**
+
+The final paper link will be added after publication.
 
 ### Summary
 
-IMPACT-CYCLE contributes:
+IMPACT-CYCLE represents long-video semantics as a revisable
+memory containing typed claims, a claim-dependency graph,
+and a provenance log. A memory constructor initializes the
+state from sampled video frames; three role-conditioned
+verifiers assess local grounding, temporal consistency, and
+global semantic coherence; and an arbitration agent fuses
+their evidence under explicit authority contracts.
 
-1. A structured semantic-memory pipeline for turning raw video into scene-centric, temporally organized, editable metadata.
-2. A cross-verification mechanism that compares metadata-grounded reasoning against direct video prompting.
-3. A human-light refinement loop that escalates only uncertain claims instead of requiring full re-annotation.
+Claims that remain unresolved are escalated to a human
+supervisor. Accepted edits trigger re-verification only
+within the affected dependency neighborhood rather than a
+full pipeline rerun.
 
 ## Installation
 
@@ -75,47 +86,39 @@ export PYTHONPATH=.
 
 ## Dataset Preparation
 
-### What the Code Expects
+### Dataset protocol
 
-The evaluation path expects:
+The public reproduction path uses the PVSG annotation format
+and the VidOR-derived video partition distributed with PVSG.
+The code expects:
 
-- a PVSG-style annotation JSON at `data/pvsg.json`
-- source videos under `data/vidor/videos`
-- per-video mask PNGs under `data/vidor/masks/<video_id>/`
+- a PVSG-style annotation file at `data/pvsg.json`;
+- source videos under `data/vidor/videos/`;
+- segmentation masks under `data/vidor/masks/<video_id>/`.
 
-Recommended local layout:
+The initial scene graphs are not copied from PVSG
+ground-truth scene graphs. Object proposals and instance
+masks are produced by the configured SAM3 pipeline. Initial
+spatial relations are then generated deterministically from
+proposal bounding boxes and masks.
+
+PVSG ground-truth annotations are used only by evaluation
+scripts. They are not used for prompt construction, claim
+verification, arbitration, or graph revision.
+
+Recommended layout:
 
 ```text
 data/
 ├── pvsg.json
 └── vidor/
     ├── videos/
-    │   ├── 1203_8316378691.mp4
-    │   └── ...
+    │   └── <video_id>.mp4
     └── masks/
-        ├── 1203_8316378691/
-        │   ├── 0000.png
-        │   ├── 0001.png
-        │   └── ...
-        └── ...
-```
-
-### Download Sources
-
-- VidOR official page: <https://xdshang.github.io/docs/vidor.html>
-- PVSG official page: <https://jingkangyang.com/PVSG/>
-- PVSG Hugging Face mirror: <https://huggingface.co/datasets/Jingkang/PVSG>
-- OpenPVSG reference repo: <https://github.com/LilyDaytoy/OpenPVSG>
-
-### Important Dataset Note
-
-The paper text says "VidOR", but the checked-in evaluation code expects a PVSG-style annotation bundle and segmentation masks. In practice, treat the public reproduction path as:
-
-- VidOR/PVSG videos
-- PVSG-style `pvsg.json`
-- PVSG-style mask directories
-
-If you only have raw VidOR annotations, the current evaluation scripts are not sufficient.
+        └── <video_id>/
+            ├── 0000.png
+            ├── 0001.png
+            └── ...
 
 ### Optional: Precompute Stage-1 Detections
 
@@ -307,10 +310,10 @@ Notes:
 
 ### 2. Dataset-Level Evaluation / Ablations
 
-Use [`run_vidor_gt_frame_eval.py`](run_vidor_gt_frame_eval.py) for the paper-style evaluation path over PVSG/VidOR data:
+Use [`run_pvsg_eval.py`](run_pvsg_eval.py) for the paper-style evaluation path over PVSG/VidOR data:
 
 ```bash
-python run_vidor_gt_frame_eval.py \
+python run_pvsg_eval.py \
   --videos_dir data/vidor/videos \
   --masks_dir data/vidor/masks \
   --gt_json data/pvsg.json \
@@ -345,7 +348,7 @@ Common variants:
 ├── app.py                        # PyQt desktop application
 ├── submission.pdf                # current paper submission
 ├── run_cycle_verify.py           # run cycle refinement on an existing scene-graph bundle
-├── run_vidor_gt_frame_eval.py    # dataset-level evaluation and ablation sweep
+├── run_pvsg_eval.py    # dataset-level evaluation and ablation sweep
 ├── parse_metrics.py              # ad hoc log parser; not release-ready
 ├── configs/                      # pipeline, ontology, cycle, and runtime configs
 ├── core/impact_sg/               # core IMPACT-CYCLE logic
