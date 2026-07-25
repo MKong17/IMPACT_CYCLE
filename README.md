@@ -381,7 +381,7 @@ Useful options:
 
 - `--frames 0 4 8` verifies only selected keyframes.
 - `--low_quota` disables expensive multi-turn and caption probes.
-- `--provider` may be `chatgpt_api` or `gemini_api` according to the paper configuration.
+- `--provider` may be `chatgpt_api` or `gemini_api` accorng to the paper configuration.
 
 ---
 
@@ -512,7 +512,7 @@ This project builds upon
 
 Corresponding author
 
-- Di Wen — `di.wen@kit.edu`
+- Kunyu Peng — `kunyu.peng@kit.edu`
 
 ---
 
